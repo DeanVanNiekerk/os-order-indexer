@@ -1,9 +1,0 @@
-{
-  "eventTypes": [
-    "created",
-    "offer_entered",
-    "bid_withdrawn",
-    "transfer",
-    "cancelled"
-  ]
-}
