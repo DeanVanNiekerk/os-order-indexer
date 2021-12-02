@@ -1,0 +1,24 @@
+{
+  "name": "os-order-indexer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:DeanVanNiekerk/os-order-indexer.git",
+  "author": "Dean van Niekerk <deanvniekerk@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node --loader ts-node/esm ./index.ts"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "lodash": "^4.17.21",
+    "lowdb": "^3.0.0",
+    "statman-stopwatch": "^2.13.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.177",
+    "@types/node": "^16.11.11"
+  }
+}
