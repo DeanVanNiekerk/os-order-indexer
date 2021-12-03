@@ -1,5 +1,5 @@
 import { AssetEvent, EventsResponse } from "../types";
-import { selectAssetActivity, withThrottledRetries } from "./utils";
+import { parseDate, selectAssetActivity, withThrottledRetries } from "./utils";
 import axios from "axios";
 import { Database } from "sqlite3";
 import { isAfter, parseISO } from "date-fns";
@@ -48,10 +48,10 @@ const updateLastCancelled = async (db: Database, event: AssetEvent) => {
     let doUpdate = !assetActivity.last_cancelled_date;
 
     if (assetActivity.last_cancelled_date) {
-      const currentLastCancelledDate = parseISO(
+      const currentLastCancelledDate = parseDate(
         assetActivity.last_cancelled_date
       );
-      const incomingLastCancelledDate = parseISO(event.created_date);
+      const incomingLastCancelledDate = parseDate(event.created_date);
       doUpdate = isAfter(incomingLastCancelledDate, currentLastCancelledDate);
 
       if (doUpdate) {
@@ -74,7 +74,7 @@ const updateLastCancelled = async (db: Database, event: AssetEvent) => {
           {
             $contractAddress: event.asset.asset_contract.address,
             $tokenId: event.asset.token_id,
-            $lastCancelledDate: event.created_date,
+            $lastCancelledDate: parseDate(event.created_date).toISOString(),
           },
           (err: unknown, result: unknown) => {
             if (err) reject(err);
@@ -100,7 +100,7 @@ const updateLastCancelled = async (db: Database, event: AssetEvent) => {
       {
         $contractAddress: event.asset.asset_contract.address,
         $tokenId: event.asset.token_id,
-        $cancelledDate: event.created_date,
+        $cancelledDate: parseDate(event.created_date).toISOString(),
       },
       (err: unknown, result: unknown) => {
         if (err) reject(err);

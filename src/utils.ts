@@ -1,6 +1,13 @@
 import { AxiosError } from "axios";
 import { Database } from "sqlite3";
 import { AssetActivity } from "../types";
+import { zonedTimeToUtc } from "date-fns-tz";
+
+// const OS_DATE_FORMAT = "yyyy-MM-dd'T'hh:mm:ss.SSSSSS";
+
+export const parseDate = (date: string) => {
+  return zonedTimeToUtc(date, "UTC");
+};
 
 export const withThrottledRetries = async <Ret>(
   func: () => Promise<Ret>,

@@ -1,7 +1,8 @@
 import { Database } from "sqlite3";
-import { withThrottledRetries } from "./utils";
+import { parseDate, withThrottledRetries } from "./utils";
 import axios from "axios";
 import { AssetEvent, EventsResponse } from "../types";
+import { addSeconds } from "date-fns";
 
 export const loadOrders = async (
   db: Database,
@@ -37,12 +38,19 @@ const addOrder = (db: Database, event: AssetEvent) => {
     duration: event.duration,
   });
 
+  let expirationDate: Date | null = null;
+
+  if (event.duration) {
+    expirationDate = addSeconds(parseDate(event.created_date), event.duration);
+  }
+
   return new Promise((resolve, reject) => {
     db.run(
-      "INSERT INTO orders (event_id, created_date, contract_address, token_id) VALUES ($eventId, $createdDate, $contractAddress, $tokenId) ON CONFLICT DO NOTHING",
+      "INSERT INTO orders (event_id, created_date, expiration_date, contract_address, token_id) VALUES ($eventId, $createdDate, $expirationDate, $contractAddress, $tokenId) ON CONFLICT DO NOTHING",
       {
         $eventId: event.id,
-        $createdDate: event.created_date,
+        $createdDate: parseDate(event.created_date).toISOString(),
+        $expirationDate: expirationDate?.toISOString() ?? null,
         $contractAddress: event.asset.asset_contract.address,
         $tokenId: event.asset.token_id,
       },

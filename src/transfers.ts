@@ -1,8 +1,8 @@
 import { AssetEvent, EventsResponse } from "../types";
-import { selectAssetActivity, withThrottledRetries } from "./utils";
+import { parseDate, selectAssetActivity, withThrottledRetries } from "./utils";
 import axios from "axios";
 import { Database } from "sqlite3";
-import { isAfter, parseISO } from "date-fns";
+import { isAfter } from "date-fns";
 
 export const loadTransfers = async (
   db: Database,
@@ -12,7 +12,7 @@ export const loadTransfers = async (
 ): Promise<number> => {
   const response = await withThrottledRetries(() =>
     axios.get(
-      `https://testnets-api.opensea.io/api/v1/events?asset_contract_address=${contractAddress}&only_opensea=false&offset=${offset}&limit=${limit}&event_type=cancelled`
+      `https://testnets-api.opensea.io/api/v1/events?asset_contract_address=${contractAddress}&only_opensea=false&offset=${offset}&limit=${limit}&event_type=transfer`
     )
   );
 
@@ -48,10 +48,10 @@ const updateLastTransfer = async (db: Database, event: AssetEvent) => {
     let doUpdate = !assetActivity.last_transfer_date;
 
     if (assetActivity.last_transfer_date) {
-      const currentLastTransferDate = parseISO(
+      const currentLastTransferDate = parseDate(
         assetActivity.last_transfer_date
       );
-      const incomingLastTransferDate = parseISO(event.created_date);
+      const incomingLastTransferDate = parseDate(event.created_date);
       doUpdate = isAfter(incomingLastTransferDate, currentLastTransferDate);
 
       if (doUpdate) {
@@ -74,7 +74,7 @@ const updateLastTransfer = async (db: Database, event: AssetEvent) => {
           {
             $contractAddress: event.asset.asset_contract.address,
             $tokenId: event.asset.token_id,
-            $lastTransferDate: event.created_date,
+            $lastTransferDate: parseDate(event.created_date).toISOString(),
           },
           (err: unknown, result: unknown) => {
             if (err) reject(err);
@@ -100,7 +100,7 @@ const updateLastTransfer = async (db: Database, event: AssetEvent) => {
       {
         $contractAddress: event.asset.asset_contract.address,
         $tokenId: event.asset.token_id,
-        $transferDate: event.created_date,
+        $transferDate: parseDate(event.created_date).toISOString(),
       },
       (err: unknown, result: unknown) => {
         if (err) reject(err);
